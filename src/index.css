@@ -1,0 +1,23 @@
+body {
+  position: fixed;
+  left: 0px;
+  top: 0px;
+  opacity: 0.9;
+}
+
+.bg{
+  position: fixed;
+  left: 0px;
+  top: 0px;
+  background-size: cover;
+  height: 100%;
+  width: 100%;
+}
+
+canvas {
+  position: fixed;
+  left: 20px;
+  top: 20px;
+  margin: 0 auto;
+  background-color: white;
+}
