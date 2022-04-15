@@ -1,0 +1,7 @@
+canvas {
+    position: fixed;
+    left: 40px;
+    top: 40px;
+    margin: 0 auto;
+    background-color: white;
+}

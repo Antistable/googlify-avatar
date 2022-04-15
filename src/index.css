@@ -7,17 +7,10 @@ body {
 
 .bg{
   position: fixed;
-  left: 0px;
-  top: 0px;
-  background-size: cover;
+  top: 0;
+  left: 0;
   height: 100%;
-  width: 100%;
-}
-
-canvas {
-  position: fixed;
-  left: 20px;
-  top: 20px;
-  margin: 0 auto;
-  background-color: white;
+  min-height: 100%;
+  min-width: 100%;
+  z-index: -1;
 }

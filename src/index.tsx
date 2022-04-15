@@ -9,7 +9,7 @@ const root = ReactDOM.createRoot(
 
 root.render(
   <React.StrictMode>
-    <img src={require('./bg.png')} className='bg' />
+    <img src={require('./img/bg.png')} className='bg' />
     <App />
   </React.StrictMode>
 );
