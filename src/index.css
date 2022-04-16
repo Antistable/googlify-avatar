@@ -2,7 +2,6 @@ body {
   position: fixed;
   left: 0px;
   top: 0px;
-  opacity: 0.9;
 }
 
 .bg {
@@ -13,7 +12,6 @@ body {
   min-height: 100%;
   min-width: 100%;
   z-index: -1;
-  pointer-events: none;
 }
 
 .bg::selection {

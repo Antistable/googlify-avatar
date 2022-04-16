@@ -12,18 +12,16 @@ class App extends React.Component<any, {
 
   canvas: RefObject<HTMLCanvasElement> = createRef();
 
-  context: CanvasRenderingContext2D = document.createElement('canvas').getContext('2d') as CanvasRenderingContext2D;
-
-  colors = new Map([
+  brushColors: Map<string, string> = new Map([
     ['r', '#EB4334'],
     ['g', '#35AA53'],
     ['b', '#4286F3'],
     ['y', '#FAC230']
   ])
 
-  outlinedImageColorArray = document.createElement('canvas').getContext('2d')?.getImageData(0, 0, 1, 1).data;
+  outlinedImageColorArray: Uint8ClampedArray = new Uint8ClampedArray();
 
-  color = '#bfbfbf'
+  currentBrushColor: string = '#bfbfbf'
 
   state = {
     stage: Stage.Outline,
@@ -51,6 +49,13 @@ class App extends React.Component<any, {
           )
         }
 
+        {
+          <>
+            <img src={require('./img/re.png')} onClick={() => this.reOutline()} />
+            <img src={require('./img/open.png')} onClick={() => this.save()} />
+          </>
+        }
+
         <canvas
           width={window.innerWidth - 80}
           height={window.innerHeight - 80}
@@ -62,8 +67,11 @@ class App extends React.Component<any, {
     );
   }
 
-  componentDidMount() {
-    this.context = this.canvas.current?.getContext('2d') as CanvasRenderingContext2D;
+  save() {
+    const link = document.createElement('a');
+    link.download = 'avatar.png';
+    link.href = this.canvas.current?.toDataURL() as string;
+    link.click();
   }
 
   touch(e: TouchEvent) {
@@ -73,7 +81,7 @@ class App extends React.Component<any, {
   }
 
   mouse(e: MouseEvent) {
-    if (e.buttons === 1) {
+    if (e.buttons === 1) /* if pressing */ {
       const x = e.clientX;
       const y = e.clientY;
       this.draw(x - (this.canvas.current?.offsetLeft as number), y - (this.canvas.current?.offsetTop as number));
@@ -81,18 +89,26 @@ class App extends React.Component<any, {
   }
 
   draw(x: number, y: number) {
-    const context = this.canvas.current?.getContext('2d') as CanvasRenderingContext2D;;
+    const context = this.canvas.current?.getContext('2d') as CanvasRenderingContext2D;
+
+    // make iOS Chrome compatible
+    this.canvas.current?.getContext('2d')?.putImageData(this.canvas.current?.getContext('2d')?.getImageData(0, 0, this.canvas.current.width, this.canvas.current.height) as ImageData, 0, 0);
+
+    // draw circle
     context.beginPath();
     context.arc(x, y, 20, 0, 2 * Math.PI);
-    context.fillStyle = this.color;
+    context.fillStyle = this.currentBrushColor;
     context.fill();
     context.closePath();
+
+    // remove excess
     if (this.state.stage === Stage.Color) {
       let coloredImageData = this.canvas.current?.getContext('2d')?.getImageData(0, 0, this.canvas.current.width, this.canvas.current.height) as ImageData;
-      let colorsArray = coloredImageData.data;
-      for (let index = 0; index < colorsArray.length; index++) {
-        if ((this.outlinedImageColorArray as Uint8ClampedArray)[index] === 0) {
-          colorsArray[index] = 0;
+      let coloredImageColorArray = coloredImageData.data;
+      for (let index = 3; index < coloredImageColorArray.length; index += 4) {
+        if (this.outlinedImageColorArray[index] === 0) /*if pixel wasn't outlined */ {
+          // set transperancy 0
+          coloredImageColorArray[index] = 0;
         }
       }
       this.canvas.current?.getContext('2d')?.putImageData(coloredImageData, 0, 0);
@@ -100,12 +116,19 @@ class App extends React.Component<any, {
   }
 
   changeColor(color: string) {
-    this.color = this.colors.get(color) as string;
+    this.currentBrushColor = this.brushColors.get(color) as string;
   }
 
   goColor() {
+    this.currentBrushColor = this.brushColors.get('y') as string;
+    this.outlinedImageColorArray = this.canvas.current?.getContext('2d')?.getImageData(0, 0, this.canvas.current.width, this.canvas.current.height).data as Uint8ClampedArray;
     this.setState({ stage: Stage.Color });
-    this.outlinedImageColorArray = this.canvas.current?.getContext('2d')?.getImageData(0, 0, this.canvas.current.width, this.canvas.current.height).data;
+  }
+
+  reOutline() {
+    this.currentBrushColor = '#bfbfbf';
+    this.setState({ stage: Stage.Outline });
+    this.canvas.current?.getContext('2d')?.clearRect(0, 0, (this.canvas.current as HTMLCanvasElement).width, (this.canvas.current as HTMLCanvasElement).height);
   }
 
 }
