@@ -6,22 +6,22 @@ enum Stage {
   Color,
 }
 
-class App extends React.Component<any, {
+class App extends React.Component<{}, {
   stage: Stage,
 }> {
 
   canvas: RefObject<HTMLCanvasElement> = createRef();
 
-  brushColors: Map<string, string> = new Map([
+  outlinedImageColorArray: Uint8ClampedArray = new Uint8ClampedArray();
+
+  currentBrushColor: string = '#444444'
+
+  readonly brushColors: Map<string, string> = new Map([
     ['r', '#EB4334'],
     ['g', '#35AA53'],
     ['b', '#4286F3'],
     ['y', '#FAC230']
   ])
-
-  outlinedImageColorArray: Uint8ClampedArray = new Uint8ClampedArray();
-
-  currentBrushColor: string = '#bfbfbf'
 
   state = {
     stage: Stage.Outline,
@@ -30,6 +30,7 @@ class App extends React.Component<any, {
   render() {
     return (
       <>
+
         {
           this.state.stage === Stage.Outline ? (
             <img
@@ -63,6 +64,9 @@ class App extends React.Component<any, {
           onMouseMove={(e: MouseEvent) => { this.mouse(e); }} // Mobile
           ref={this.canvas}
         />
+
+        <img src={require('./img/bg.png')} className='bg' />
+
       </>
     );
   }
@@ -91,9 +95,6 @@ class App extends React.Component<any, {
   draw(x: number, y: number) {
     const context = this.canvas.current?.getContext('2d') as CanvasRenderingContext2D;
 
-    // make iOS Chrome compatible
-    this.canvas.current?.getContext('2d')?.putImageData(this.canvas.current?.getContext('2d')?.getImageData(0, 0, this.canvas.current.width, this.canvas.current.height) as ImageData, 0, 0);
-
     // draw circle
     context.beginPath();
     context.arc(x, y, 20, 0, 2 * Math.PI);
@@ -101,13 +102,14 @@ class App extends React.Component<any, {
     context.fill();
     context.closePath();
 
-    // remove excess
     if (this.state.stage === Stage.Color) {
+      // remove excess pixels
       let coloredImageData = this.canvas.current?.getContext('2d')?.getImageData(0, 0, this.canvas.current.width, this.canvas.current.height) as ImageData;
       let coloredImageColorArray = coloredImageData.data;
       for (let index = 3; index < coloredImageColorArray.length; index += 4) {
-        if (this.outlinedImageColorArray[index] === 0) /*if pixel wasn't outlined */ {
-          // set transperancy 0
+        const pixelAlphaBeforeColored = this.outlinedImageColorArray[index];
+        if (pixelAlphaBeforeColored === 0) /* if pixel isn't outlined */ {
+          // set current transperancy to 0
           coloredImageColorArray[index] = 0;
         }
       }
@@ -121,14 +123,17 @@ class App extends React.Component<any, {
 
   goColor() {
     this.currentBrushColor = this.brushColors.get('y') as string;
+    // set brush color to yellow
     this.outlinedImageColorArray = this.canvas.current?.getContext('2d')?.getImageData(0, 0, this.canvas.current.width, this.canvas.current.height).data as Uint8ClampedArray;
+    // get image data for comparison
     this.setState({ stage: Stage.Color });
   }
 
   reOutline() {
-    this.currentBrushColor = '#bfbfbf';
-    this.setState({ stage: Stage.Outline });
+    this.currentBrushColor = '#444444';
     this.canvas.current?.getContext('2d')?.clearRect(0, 0, (this.canvas.current as HTMLCanvasElement).width, (this.canvas.current as HTMLCanvasElement).height);
+    // clear all
+    this.setState({ stage: Stage.Outline });
   }
 
 }
